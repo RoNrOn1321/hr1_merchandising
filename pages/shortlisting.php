@@ -106,6 +106,8 @@ $children = '
   
 </div>
 
+
+
 <script>
 const API_URL = "http://localhost/hr1_merchandising/api/shortlisting.php";
 let shortlists = [];
