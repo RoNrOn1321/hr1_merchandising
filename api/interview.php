@@ -20,6 +20,12 @@ switch ($method) {
         // Add new interview
         $data = json_decode(file_get_contents("php://input"), true);
 
+        // Debugging: Log the received data
+        error_log(print_r($data, true));
+
+        // Ensure 'status' is set to 'Pending' if not provided
+        $data['status'] = $data['status'] ?? 'Pending';
+
         $sql = "INSERT INTO interviews (candidate_name, position, interview_date, interview_time, status)
                 VALUES (:candidate_name, :position, :interview_date, :interview_time, :status)";
         $stmt = $pdo->prepare($sql);
@@ -28,7 +34,7 @@ switch ($method) {
             ':position' => $data['position'],
             ':interview_date' => $data['interview_date'],
             ':interview_time' => $data['interview_time'],
-            ':status' => $data['status'] ?? 'Pending'
+            ':status' => $data['status']
         ]);
 
         echo json_encode(["message" => "Interview scheduled successfully"]);
@@ -47,7 +53,7 @@ switch ($method) {
             ':position' => $data['position'],
             ':interview_date' => $data['interview_date'],
             ':interview_time' => $data['interview_time'],
-            ':status' => $data['status'],
+            ':status' => $data['status'] ?? 'Pending', // Use null coalescing operator for fallback
             ':id' => $data['id']
         ]);
 

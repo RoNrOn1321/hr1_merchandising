@@ -24,6 +24,22 @@ try {
             $data = json_decode(file_get_contents("php://input"), true);
             if (!$data) throw new Exception("Invalid JSON input");
 
+            // Validate rating is numeric and between 1-5
+            if (!isset($data["rating"]) || !is_numeric($data["rating"]) || $data["rating"] < 1 || $data["rating"] > 5) {
+                throw new Exception("Rating must be a number between 1 and 5");
+            }
+
+            // Convert rating to integer
+            $data["rating"] = intval($data["rating"]);
+
+            // Validate required fields
+            $requiredFields = ["employee_name", "department", "rating", "feedback_text"];
+            foreach ($requiredFields as $field) {
+                if (empty($data[$field])) {
+                    throw new Exception("Missing required field: $field");
+                }
+            }
+
             $stmt = $pdo->prepare("INSERT INTO feedback (employee_name, department, rating, feedback_text, evaluator, date) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $data["employee_name"],
@@ -33,6 +49,10 @@ try {
                 $data["evaluator"] ?? "Admin",
                 $data["date"] ?? date("Y-m-d")
             ]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new Exception("Failed to insert feedback");
+            }
 
             echo json_encode(["message" => "Feedback created"]);
             break;
@@ -52,6 +72,10 @@ try {
                 $data["id"]
             ]);
 
+            if ($stmt->rowCount() === 0) {
+                throw new Exception("Failed to update feedback");
+            }
+
             echo json_encode(["message" => "Feedback updated"]);
             break;
 
@@ -62,6 +86,10 @@ try {
             $stmt = $pdo->prepare("DELETE FROM feedback WHERE id=?");
             $stmt->execute([$data["id"]]);
 
+            if ($stmt->rowCount() === 0) {
+                throw new Exception("Failed to delete feedback");
+            }
+
             echo json_encode(["message" => "Feedback deleted"]);
             break;
 
@@ -69,6 +97,9 @@ try {
             http_response_code(405);
             echo json_encode(["error" => "Method not allowed"]);
     }
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(["error" => "Database error: " . $e->getMessage()]);
 } catch (Exception $e) {
     http_response_code(400);
     echo json_encode(["error" => $e->getMessage()]);

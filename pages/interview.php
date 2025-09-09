@@ -34,7 +34,7 @@ $children = '
         class="w-full border p-2 rounded" required>
       <select id="status" class="w-full border p-2 rounded">
         <option value="Pending">Pending</option>
-        <option value="Scheduled">Scheduled</option>
+        <option value="Completed">Completed</option>
       </select>
       <div class="flex justify-end space-x-2">
         <button type="button" onclick="closeScheduleModal()" 
@@ -62,6 +62,7 @@ async function loadInterviews() {
     let statusColor = 
       interview.status === "Scheduled" ? "bg-green-100 text-green-600" :
       interview.status === "Pending" ? "bg-yellow-100 text-yellow-600" :
+      interview.status === "Completed" ? "bg-blue-100 text-blue-600" :
       "bg-red-100 text-red-600";
 
     container.innerHTML += `
@@ -121,7 +122,7 @@ function rescheduleInterview(id, name, position, date, time, status) {
   document.getElementById("position").value = position;
   document.getElementById("interview_date").value = date;
   document.getElementById("interview_time").value = time;
-  document.getElementById("status").value = status;
+  document.getElementById("status").value = status; // Ensure this matches the value in the dropdown
   document.getElementById("scheduleModal").classList.remove("hidden");
 }
 

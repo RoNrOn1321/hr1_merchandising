@@ -33,9 +33,11 @@ $children = '
 
       <label class="block mb-2 text-gray-700">Rating</label>
       <select id="feedbackRating" class="w-full border rounded p-2 mb-4">
-        <option>Excellent</option>
-        <option>Good</option>
-        <option>Needs Improvement</option>
+        <option value="5">Excellent</option>
+        <option value="4">Good</option>
+        <option value="3">Average</option>
+        <option value="2">Needs Improvement</option>
+        <option value="1">Poor</option>
       </select>
 
       <label class="block mb-2 text-gray-700">Feedback</label>
@@ -86,11 +88,19 @@ async function loadFeedbackRecords() {
     const container = document.getElementById("feedbackContainer");
     container.innerHTML = "";
     records.forEach(record => {
+      const ratingClass = record.rating >= 4 ? "bg-green-100 text-green-600" 
+        : record.rating >= 3 ? "bg-yellow-100 text-yellow-600" 
+        : "bg-red-100 text-red-600";
+      const ratingText = record.rating === 5 ? "Excellent" 
+        : record.rating === 4 ? "Good" 
+        : record.rating === 3 ? "Average"
+        : record.rating === 2 ? "Needs Improvement"
+        : "Poor";
       container.innerHTML += `
       <div class="bg-white rounded-lg shadow-md p-5">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-semibold text-gray-800">${record.employee_name}</h2>
-          <span class="px-3 py-1 text-sm rounded-full ${record.rating === "Excellent" ? "bg-green-100 text-green-600" : record.rating === "Good" ? "bg-yellow-100 text-yellow-600" : "bg-red-100 text-red-600"}">${record.rating}</span>
+          <span class="px-3 py-1 text-sm rounded-full ${ratingClass}">${ratingText}</span>
         </div>
         <p class="text-gray-600 text-sm">Department: ${record.department}</p>
         <p class="text-gray-600 text-sm">Evaluator: ${record.evaluator}</p>
@@ -111,22 +121,39 @@ document.getElementById("feedbackForm").addEventListener("submit", async functio
   e.preventDefault();
   const id = document.getElementById("feedbackId").value;
   const payload = {
-    employee_name: document.getElementById("employeeName").value,
-    department: document.getElementById("employeeDept").value,
-    rating: document.getElementById("feedbackRating").value,
-    feedback_text: document.getElementById("feedbackText").value
+    employee_name: document.getElementById("employeeName").value.trim(),
+    department: document.getElementById("employeeDept").value.trim(),
+    rating: document.getElementById("feedbackRating").value.trim(),
+    feedback_text: document.getElementById("feedbackText").value.trim()
   };
+
+  // Validate payload before sending
+  if (!payload.employee_name || !payload.department || !payload.rating || !payload.feedback_text) {
+    alert("All fields are required.");
+    return;
+  }
+
+  if (!["5", "4", "3", "2", "1"].includes(payload.rating)) {
+    alert("Invalid rating value.");
+    return;
+  }
+
   try {
     const res = await fetch(API_URL, {
       method: id ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(id ? {...payload, id: id} : payload)
+      body: JSON.stringify(id ? { ...payload, id: id } : payload)
     });
     const result = await res.json();
-    alert(result.message);
-    closeFeedbackModal();
-    loadFeedbackRecords();
-  } catch(e) {
+
+    if (res.ok) {
+      alert(result.message);
+      closeFeedbackModal();
+      loadFeedbackRecords();
+    } else {
+      alert(result.error || "Failed to save feedback.");
+    }
+  } catch (e) {
     alert("Failed to save feedback: " + e.message);
   }
 });

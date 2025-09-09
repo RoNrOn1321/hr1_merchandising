@@ -31,7 +31,7 @@ try {
                 $data['category'],
                 $data['duration'],
                 $data['start_date'],
-                $data['status'] ?? 'Upcoming'
+                $data['status'] ?? 'Active' // Ensure default status is "Active"
             ]);
             echo json_encode(["message" => "Module created successfully"]);
             break;

@@ -40,15 +40,38 @@ try {
             $data = json_decode(file_get_contents("php://input"), true);
             if (!$data || !isset($data["id"])) { throw new Exception("Invalid data"); }
 
-            $stmt = $pdo->prepare("UPDATE job_offers SET candidate_name=?, position=?, salary=?, offer_date=?, status=? WHERE id=?");
-            $stmt->execute([
-                $data["candidate_name"],
-                $data["position"],
-                $data["salary"],
-                $data["offer_date"],
-                $data["status"],
-                $data["id"]
-            ]);
+            $fields = [];
+            $params = [];
+
+            if (isset($data["candidate_name"])) {
+                $fields[] = "candidate_name=?";
+                $params[] = $data["candidate_name"];
+            }
+            if (isset($data["position"])) {
+                $fields[] = "position=?";
+                $params[] = $data["position"];
+            }
+            if (isset($data["salary"])) {
+                $fields[] = "salary=?";
+                $params[] = $data["salary"];
+            }
+            if (isset($data["offer_date"])) {
+                $fields[] = "offer_date=?";
+                $params[] = $data["offer_date"];
+            }
+            if (isset($data["status"])) {
+                $fields[] = "status=?";
+                $params[] = $data["status"];
+            }
+
+            if (empty($fields)) {
+                throw new Exception("No fields to update");
+            }
+
+            $params[] = $data["id"];
+            $stmt = $pdo->prepare("UPDATE job_offers SET " . implode(", ", $fields) . " WHERE id=?");
+            $stmt->execute($params);
+
             echo json_encode(["message" => "Job offer updated"]);
             break;
 
